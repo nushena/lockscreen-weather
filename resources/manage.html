@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>锁屏管理</title>
+    <link rel="stylesheet" href="./assets/styles.css" />
+    <link rel="icon" href="data:," />
+  </head>
+  <body class="manage-page">
+    <main class="manage-shell">
+      <section class="manage-panel" aria-labelledby="manageTitle">
+        <header class="manage-header">
+          <div>
+            <p class="manage-kicker">锁屏配置</p>
+            <h1 id="manageTitle" class="manage-title">天气查询管理页</h1>
+            <p class="manage-summary">
+              这里保存主页面天气接口的查询参数。adcode 优先级最高，city
+              支持中文和英文；两者都不填时按客户端 IP 自动定位。
+            </p>
+          </div>
+        </header>
+
+        <form id="manageForm" class="manage-form">
+          <label class="manage-field" for="adcode">
+            <span class="manage-label">adcode</span>
+            <input
+              id="adcode"
+              name="adcode"
+              class="manage-input"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="例如 210100"
+            />
+            <span class="manage-help">按行政区编码查询，优先级最高。</span>
+          </label>
+
+          <label class="manage-field" for="city">
+            <span class="manage-label">city</span>
+            <input
+              id="city"
+              name="city"
+              class="manage-input"
+              autocomplete="off"
+              placeholder="例如 北京 / Tokyo"
+            />
+            <span class="manage-help">支持中文和英文城市名。</span>
+          </label>
+
+          <div class="manage-actions">
+            <button class="manage-button manage-button-primary" type="submit">
+              保存配置
+            </button>
+            <button class="manage-button" type="button" id="clearButton">
+              清空配置
+            </button>
+          </div>
+        </form>
+
+        <p class="manage-rule">
+          接口查询顺序：adcode → city → IP 自动定位。lang 默认 zh。
+        </p>
+        <p
+          id="manageStatus"
+          class="manage-status"
+          role="status"
+          aria-live="polite"
+        ></p>
+      </section>
+    </main>
+
+    <script src="./neutralino.js"></script>
+    <script type="module" src="./assets/neutralino-entry.js"></script>
+    <script type="module" src="./assets/manage.js"></script>
+  </body>
+</html>

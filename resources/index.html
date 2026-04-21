@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>锁屏</title>
+    <link rel="stylesheet" href="./assets/styles.css" />
+    <link rel="icon" href="data:," />
+  </head>
+  <body class="screen-page">
+    <div class="screen">
+      <main class="content" aria-label="时钟">
+        <div class="center-stack">
+          <h1 class="clock" aria-live="polite" aria-atomic="true">
+            <span id="hour" class="time-segment">--</span>
+            <span class="colon">:</span>
+            <span id="minute" class="time-segment">--</span>
+            <span class="colon">:</span>
+            <span id="second" class="time-segment">--</span>
+          </h1>
+          <div id="date" class="date">&nbsp;</div>
+          <div class="weather-summary" aria-label="天气信息">
+            <div id="weather" class="weather-main"></div>
+            <div id="weatherDetails" class="weather-details"></div>
+          </div>
+          <div class="info-grid">
+            <section class="info-panel hot-search-panel" aria-label="热搜">
+              <div class="panel-title">热搜</div>
+              <div id="hotSearchUpdate" class="hot-search-update" hidden></div>
+              <ol id="hotSearchList" class="hot-search-list"></ol>
+            </section>
+            <section
+              id="alertPanel"
+              class="info-panel alert-panel"
+              aria-label="天气预警"
+              hidden
+            >
+              <div class="panel-title">天气预警</div>
+              <div id="weatherAlert" class="weather-alert"></div>
+            </section>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <div id="status" class="status"></div>
+      </footer>
+    </div>
+
+    <script src="./neutralino.js"></script>
+    <script type="module" src="./assets/neutralino-entry.js"></script>
+    <script type="module" src="./assets/main.js"></script>
+    <script>
+      (() => {
+        if (typeof Neutralino === "undefined") {
+          return;
+        }
+
+        const args = Array.isArray(window.NL_ARGS) ? window.NL_ARGS : [];
+        const isScreenMode = args
+          .map((item) =>
+            String(item ?? "")
+              .trim()
+              .toLowerCase(),
+          )
+          .some((item) => item.startsWith("/s"));
+
+        if (!isScreenMode) {
+          return;
+        }
+
+        let armed = false;
+        let exited = false;
+
+        setTimeout(() => {
+          armed = true;
+        }, 800);
+
+        const exit = () => {
+          if (!armed || exited) {
+            return;
+          }
+          exited = true;
+          window.removeEventListener("mousemove", exit);
+          window.removeEventListener("keydown", exit);
+          setTimeout(() => {
+            Neutralino.app.exit();
+          }, 300);
+        };
+
+        window.addEventListener("mousemove", exit, { passive: true });
+        window.addEventListener("keydown", exit);
+      })();
+    </script>
+  </body>
+</html>

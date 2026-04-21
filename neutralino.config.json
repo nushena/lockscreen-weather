@@ -1,0 +1,45 @@
+{
+  "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
+  "applicationId": "cn.lockscreen.app",
+  "version": "1.0.0",
+  "defaultMode": "window",
+  "port": 0,
+  "documentRoot": "/resources/",
+  "url": "/index.html",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "tokenSecurity": "one-time",
+  "nativeAllowList": ["app.*", "window.*", "filesystem.*", "debug.log"],
+  "logging": {
+    "enabled": true,
+    "writeToLogFile": true
+  },
+  "modes": {
+    "window": {
+      "title": "锁屏",
+      "width": 900,
+      "height": 640,
+      "minWidth": 640,
+      "minHeight": 460,
+      "center": true,
+      "fullScreen": true,
+      "alwaysOnTop": true,
+      "icon": "/resources/icons/appIcon.png",
+      "enableInspector": false,
+      "borderless": false,
+      "maximize": false,
+      "hidden": true,
+      "resizable": false,
+      "useSavedState": false,
+      "exitProcessOnClose": true
+    }
+  },
+  "cli": {
+    "binaryName": "lockscreen",
+    "resourcesPath": "/resources/",
+    "extensionsPath": "/extensions/",
+    "clientLibrary": "/resources/neutralino.js",
+    "binaryVersion": "nightly",
+    "clientVersion": "nightly"
+  }
+}

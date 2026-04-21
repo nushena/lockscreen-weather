@@ -1,0 +1,5 @@
+dist/*
+.tmp/*
+.claude/*
+neutralinojs.log
+weather-config.json
