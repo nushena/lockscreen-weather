@@ -1,5 +1,6 @@
 import { renderTime } from "./time.js";
 import { updateWeather, WEATHER_REFRESH_MS } from "./weather-ui.js";
+import { applyBackgroundFromConfig } from "./background.js";
 
 const HOTBOARD_API_URL = "https://uapis.cn/api/v1/misc/hotboard?type=weibo";
 const HOTBOARD_REFRESH_MS = 5 * 60 * 1000;
@@ -125,6 +126,9 @@ async function loadHotSearches() {
 
 renderTime(hourEl, minuteEl, secondEl, dateEl);
 loadHotSearches();
+applyBackgroundFromConfig().catch((error) => {
+  console.error("背景应用失败:", error);
+});
 updateWeather({ weatherEl, weatherDetailsEl, weatherAlertEl, alertPanelEl, statusEl });
 setInterval(() => renderTime(hourEl, minuteEl, secondEl, dateEl), 1000);
 setInterval(() => updateWeather({ weatherEl, weatherDetailsEl, weatherAlertEl, alertPanelEl, statusEl }), WEATHER_REFRESH_MS);

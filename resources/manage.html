@@ -60,6 +60,68 @@
           </div>
         </form>
 
+        <section class="manage-divider" aria-hidden="true"></section>
+
+        <section class="manage-panel-block" aria-labelledby="backgroundTitle">
+          <h2 id="backgroundTitle" class="manage-subtitle">背景设置</h2>
+
+          <div class="manage-field">
+            <div class="manage-label">背景模式</div>
+            <div class="manage-radio-group" role="radiogroup" aria-label="背景模式">
+              <label class="manage-radio">
+                <input type="radio" name="bgMode" value="black" />
+                <span>默认黑色</span>
+              </label>
+              <label class="manage-radio">
+                <input type="radio" name="bgMode" value="api-random" />
+                <span>API 随机壁纸</span>
+              </label>
+              <label class="manage-radio">
+                <input type="radio" name="bgMode" value="custom" />
+                <span>自定义壁纸</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="bgApiBlock" class="manage-panel-subblock">
+            <label class="manage-field" for="bgApiUrl">
+              <span class="manage-label">随机壁纸 API 地址</span>
+              <input
+                id="bgApiUrl"
+                name="bgApiUrl"
+                class="manage-input"
+                autocomplete="off"
+                placeholder="例如 https://picsum.photos/1920/1080"
+              />
+              <span class="manage-help">用于随机壁纸模式；地址应直接返回图片内容。</span>
+            </label>
+          </div>
+
+          <div id="bgCustomBlock" class="manage-panel-subblock">
+            <div class="manage-actions">
+              <button class="manage-button" type="button" id="bgPickButton">
+                选择本地图片
+              </button>
+              <input
+                id="bgFileInput"
+                type="file"
+                accept="image/*"
+                class="manage-file-input"
+              />
+            </div>
+
+            <div class="manage-field">
+              <div class="manage-label">历史壁纸</div>
+              <div id="bgHistory" class="bg-history" aria-label="历史壁纸列表"></div>
+              <div id="bgHistoryEmpty" class="manage-help" hidden>
+                暂无历史壁纸。
+              </div>
+            </div>
+          </div>
+
+          <p id="bgStatus" class="manage-status" role="status" aria-live="polite"></p>
+        </section>
+
         <p class="manage-rule">
           接口查询顺序：adcode → city → IP 自动定位。lang 默认 zh。
         </p>
