@@ -75,7 +75,8 @@ export async function updateWeather({ weatherEl, weatherDetailsEl, weatherAlertE
     renderWeatherDetails(weatherDetailsEl, alertPanelEl, weatherAlertEl, data);
 
     const city = [data?.province, data?.city, data?.district].filter(Boolean).join(" / ");
-    const reportTime = data?.report_time ? ` · 更新于 ${data.report_time}` : "";
+    let nowTime=new Date().toLocaleString();
+    const reportTime = ` · 更新于 ${nowTime}`;
     statusEl.textContent = `${city || "自动定位"}${reportTime}`;
   } catch (error) {
     console.error("天气获取失败:", error);
