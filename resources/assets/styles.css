@@ -8,6 +8,14 @@
   --grid: rgba(255, 255, 255, 0.05);
 }
 
+body.light-theme {
+  color-scheme: light;
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: rgba(26, 26, 26, 0.62);
+  --grid: rgba(0, 0, 0, 0.06);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -377,7 +385,6 @@ body::after {
 
 body.manage-page {
   overflow: auto;
-  background: #000000;
 }
 
 .manage-page::before,
@@ -397,10 +404,11 @@ body.manage-page {
   padding: clamp(20px, 3vw, 32px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
-  background: #000000;
+  background: rgba(255, 255, 255, 0.03);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.02),
     0 0 32px rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
 }
 
 .manage-header {
@@ -511,6 +519,36 @@ body.manage-page {
 .manage-status {
   margin: 18px 0 0;
   min-height: 1.6em;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.manage-status-inline {
+  margin-top: 10px;
+}
+
+.manage-status[data-state="success"] {
+  color: #d7ffe1;
+  border-color: rgba(80, 220, 140, 0.36);
+  background: rgba(50, 140, 88, 0.18);
+}
+
+.manage-status[data-state="error"] {
+  color: #ffd7d7;
+  border-color: rgba(255, 110, 110, 0.34);
+  background: rgba(150, 42, 42, 0.2);
+}
+
+.manage-status[data-state="pending"] {
+  color: #fff1cf;
+  border-color: rgba(255, 196, 92, 0.34);
+  background: rgba(120, 84, 20, 0.2);
 }
 
 .manage-divider {
@@ -554,61 +592,6 @@ body.manage-page {
 
 .manage-radio input {
   accent-color: rgba(245, 245, 245, 0.85);
-}
-
-.manage-file-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-.bg-history {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 12px;
-}
-
-.bg-item {
-  position: relative;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.35);
-  aspect-ratio: 16 / 9;
-}
-
-.bg-item button {
-  font: inherit;
-}
-
-.bg-thumb {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  cursor: pointer;
-}
-
-.bg-delete {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.45);
-  color: var(--fg);
-  border-radius: 999px;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-
-.bg-delete:hover {
-  border-color: rgba(255, 255, 255, 0.26);
 }
 
 body.screen-page {

@@ -1,6 +1,5 @@
 dist/*
 .tmp/*
 .claude/*
-.image/*
 neutralinojs.log
 weather-config.json

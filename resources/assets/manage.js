@@ -1,8 +1,6 @@
 import { clearWeatherConfig, getWeatherConfig, setWeatherConfig } from "./weather-config.js";
 import {
-  deleteHistoryItem,
   getBackgroundState,
-  importCustomWallpaper,
   setBackgroundApiUrl,
   setBackgroundMode,
 } from "./background.js";
@@ -10,27 +8,34 @@ import {
 const formEl = document.getElementById("manageForm");
 const adcodeEl = document.getElementById("adcode");
 const cityEl = document.getElementById("city");
+const themeEl = document.getElementById("theme");
 const clearEl = document.getElementById("clearButton");
-const statusEl = document.getElementById("manageStatus");
+const statusEl = document.getElementById("manageFormStatus");
 
 const bgStatusEl = document.getElementById("bgStatus");
 const bgApiUrlEl = document.getElementById("bgApiUrl");
-const bgPickButtonEl = document.getElementById("bgPickButton");
-const bgFileInputEl = document.getElementById("bgFileInput");
-const bgHistoryEl = document.getElementById("bgHistory");
-const bgHistoryEmptyEl = document.getElementById("bgHistoryEmpty");
 const bgApiBlockEl = document.getElementById("bgApiBlock");
-const bgCustomBlockEl = document.getElementById("bgCustomBlock");
 
-function setStatus(text) {
-  statusEl.textContent = text;
+function normalizeStatusType(type) {
+  return ["success", "error", "pending", "info"].includes(type) ? type : "info";
 }
 
-function setBgStatus(text) {
-  if (!bgStatusEl) {
+function setStatusState(element, text, type = "info") {
+  if (!element) {
     return;
   }
-  bgStatusEl.textContent = text;
+
+  const normalizedType = normalizeStatusType(type);
+  element.textContent = text;
+  element.dataset.state = normalizedType;
+}
+
+function setStatus(text, type = "info") {
+  setStatusState(statusEl, text, type);
+}
+
+function setBgStatus(text, type = "info") {
+  setStatusState(bgStatusEl, text, type);
 }
 
 function selectedBgMode() {
@@ -49,44 +54,6 @@ function applyModeVisibility(mode) {
   if (bgApiBlockEl) {
     bgApiBlockEl.hidden = mode !== "api-random";
   }
-  if (bgCustomBlockEl) {
-    bgCustomBlockEl.hidden = mode !== "custom";
-  }
-}
-
-function fileUrlFromRelative(relativePath) {
-  const normalized = String(relativePath ?? "")
-    .trim()
-    .replace(/\\/g, "/")
-    .replace(/^\.\//, "")
-    .replace(/^\/+/, "");
-  if (!normalized) {
-    return "";
-  }
-
-  return `./image/${normalized.replace(/^image\//, "")}`;
-}
-
-function renderBackgroundHistory(background) {
-  if (!bgHistoryEl || !bgHistoryEmptyEl) {
-    return;
-  }
-
-  const history = Array.isArray(background?.history) ? background.history : [];
-  bgHistoryEmptyEl.hidden = history.length > 0;
-
-  bgHistoryEl.innerHTML = history
-    .map((item) => {
-      const path = String(item?.path ?? "");
-      const src = fileUrlFromRelative(path);
-      const safePath = path.replace(/"/g, "&quot;");
-      return `\
-      <div class="bg-item" data-path="${safePath}">
-        <img class="bg-thumb" src="${src}" alt="历史壁纸" loading="lazy" onerror="this.dataset.failed='1'; this.alt='历史壁纸加载失败';" />
-        <button class="bg-delete" type="button" data-action="delete" data-path="${safePath}">删除</button>
-      </div>`;
-    })
-    .join("");
 }
 
 async function fillBackgroundForm() {
@@ -96,37 +63,43 @@ async function fillBackgroundForm() {
     bgApiUrlEl.value = bg?.apiUrl || "";
   }
   applyModeVisibility(bg?.mode || "black");
-  renderBackgroundHistory(bg);
 }
 
 async function fillForm() {
   const config = await getWeatherConfig();
   adcodeEl.value = config.adcode;
   cityEl.value = config.city;
+  if (themeEl) {
+    themeEl.value = config.theme === "light" ? "light" : "dark";
+  }
 }
 
 await fillForm();
 await fillBackgroundForm();
-setStatus("保存后，主页面会直接读取本地 JSON 配置。");
-setBgStatus("切换背景模式后，主页面下次启动会自动生效。");
+setStatus("保存后会立即写入本地配置。", "info");
+setBgStatus("切换背景模式后，下次启动锁屏会自动生效。", "info");
 
 formEl.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   try {
+    const currentConfig = await getWeatherConfig();
     const config = await setWeatherConfig({
+      ...currentConfig,
       adcode: adcodeEl.value,
       city: cityEl.value,
+      theme: themeEl?.value === "light" ? "light" : "dark",
     });
 
     await fillForm();
     setStatus(
       config.adcode || config.city
-        ? "已保存配置，主页面会直接读取这份 JSON。"
-        : "已保存为空配置，主页面将回到客户端 IP 自动定位。",
+        ? "保存成功。"
+        : "配置已清空，锁屏将回到 IP 自动定位。",
+      "success",
     );
   } catch (error) {
-    setStatus(`保存失败：${error.message}`);
+    setStatus(`保存失败：${error.message}`, "error");
   }
 });
 
@@ -136,9 +109,9 @@ clearEl.addEventListener("click", async () => {
     formEl.reset();
     await fillForm();
     await fillBackgroundForm();
-    setStatus("已清空配置，主页面将回到客户端 IP 自动定位。");
+    setStatus("配置已清空，锁屏将回到 IP 自动定位。", "success");
   } catch (error) {
-    setStatus(`清空失败：${error.message}`);
+    setStatus(`清空失败：${error.message}`, "error");
   }
 });
 
@@ -148,9 +121,9 @@ for (const radio of document.querySelectorAll('input[name="bgMode"]')) {
       const mode = selectedBgMode();
       await setBackgroundMode(mode);
       applyModeVisibility(mode);
-      setBgStatus(`已切换背景模式：${mode}`);
+      setBgStatus(`背景模式已切换为${mode === "api-random" ? "API 随机壁纸" : "默认黑色"}。`, "success");
     } catch (error) {
-      setBgStatus(`切换失败：${error.message}`);
+      setBgStatus(`切换失败：${error.message}`, "error");
     }
   });
 }
@@ -158,50 +131,8 @@ for (const radio of document.querySelectorAll('input[name="bgMode"]')) {
 bgApiUrlEl?.addEventListener("change", async () => {
   try {
     await setBackgroundApiUrl(bgApiUrlEl.value);
-    setBgStatus("已保存 API 地址。");
+    setBgStatus("随机壁纸地址保存成功。", "success");
   } catch (error) {
-    setBgStatus(`保存失败：${error.message}`);
-  }
-});
-
-bgPickButtonEl?.addEventListener("click", () => {
-  bgFileInputEl?.click();
-});
-
-bgFileInputEl?.addEventListener("change", async () => {
-  const file = bgFileInputEl.files?.[0];
-  if (!file) {
-    return;
-  }
-
-  try {
-    setBgStatus("正在导入壁纸...");
-    const bg = await importCustomWallpaper(file);
-    await setBackgroundMode("custom");
-    setSelectedBgMode("custom");
-    renderBackgroundHistory(bg);
-    setBgStatus("已导入并应用自定义壁纸（图片已复制到 image/）。");
-  } catch (error) {
-    setBgStatus(`导入失败：${error.message}`);
-  } finally {
-    bgFileInputEl.value = "";
-  }
-});
-
-bgHistoryEl?.addEventListener("click", async (event) => {
-  const target = event.target;
-  const action = target?.getAttribute?.("data-action");
-  const path = target?.getAttribute?.("data-path");
-
-  if (action === "delete") {
-    try {
-      setBgStatus("正在删除...");
-      const bg = await deleteHistoryItem(path);
-      renderBackgroundHistory(bg);
-      setBgStatus("已删除（同时删除 image/ 下的实体文件）。");
-    } catch (error) {
-      setBgStatus(`删除失败：${error.message}`);
-    }
-    return;
+    setBgStatus(`保存失败：${error.message}`, "error");
   }
 });

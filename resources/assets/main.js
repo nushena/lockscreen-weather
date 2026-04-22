@@ -1,6 +1,7 @@
 import { renderTime } from "./time.js";
 import { updateWeather, WEATHER_REFRESH_MS } from "./weather-ui.js";
 import { applyBackgroundFromConfig } from "./background.js";
+import { getWeatherConfig } from "./weather-config.js";
 
 const HOTBOARD_API_URL = "https://uapis.cn/api/v1/misc/hotboard?type=weibo";
 const HOTBOARD_REFRESH_MS = 5 * 60 * 1000;
@@ -124,8 +125,16 @@ async function loadHotSearches() {
   }
 }
 
+async function applyThemeFromConfig() {
+  const config = await getWeatherConfig();
+  document.body.classList.toggle("light-theme", config?.theme === "light");
+}
+
 renderTime(hourEl, minuteEl, secondEl, dateEl);
 loadHotSearches();
+applyThemeFromConfig().catch((error) => {
+  console.error("主题应用失败:", error);
+});
 applyBackgroundFromConfig().catch((error) => {
   console.error("背景应用失败:", error);
 });

@@ -2,6 +2,7 @@ const DEFAULT_CONFIG = {
   adcode: "",
   city: "",
   lang: "zh",
+  theme: "dark",
   background: {
     mode: "black",
     apiUrl: "https://picsum.photos/1920/1080",
@@ -21,22 +22,7 @@ function normalizeBackgroundMode(value) {
   if (mode === "api" || mode === "api-random") {
     return "api-random";
   }
-  if (mode === "custom") {
-    return "custom";
-  }
   return "black";
-}
-
-function normalizeBackgroundHistory(input) {
-  const list = Array.isArray(input) ? input : [];
-  return list
-    .map((item) => ({
-      id: normalizeText(item?.id),
-      path: normalizeText(item?.path),
-      dataUrl: normalizeText(item?.dataUrl),
-      createdAt: Number(item?.createdAt) || Date.now(),
-    }))
-    .filter((item) => item.id && (item.path || item.dataUrl));
 }
 
 function normalizeBackground(input) {
@@ -44,10 +30,18 @@ function normalizeBackground(input) {
   return {
     mode: normalizeBackgroundMode(input?.mode),
     apiUrl: apiUrl || DEFAULT_CONFIG.background.apiUrl,
-    current: normalizeText(input?.current),
-    currentDataUrl: normalizeText(input?.currentDataUrl),
-    history: normalizeBackgroundHistory(input?.history),
+    current: "",
+    currentDataUrl: "",
+    history: [],
   };
+}
+
+function normalizeTheme(value) {
+  const theme = String(value ?? "").trim().toLowerCase();
+  if (theme === "light") {
+    return "light";
+  }
+  return DEFAULT_CONFIG.theme;
 }
 
 function normalizeConfig(input) {
@@ -55,6 +49,7 @@ function normalizeConfig(input) {
     adcode: normalizeText(input?.adcode),
     city: normalizeText(input?.city),
     lang: input?.lang === "en" ? "en" : DEFAULT_CONFIG.lang,
+    theme: normalizeTheme(input?.theme),
     background: normalizeBackground(input?.background),
   };
 }
