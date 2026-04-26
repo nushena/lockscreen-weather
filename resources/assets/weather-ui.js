@@ -6,35 +6,10 @@ import {
   pickWeatherText,
 } from "./weather-format.js";
 import { buildWeatherApiUrl } from "./weather-config.js";
+import { fetchJson } from "./native-json.js";
 
 export const API_URL = "https://uapis.cn/api/v1/misc/weather";
-export const WEATHER_REFRESH_MS = 30 * 60 * 1000;
-
-async function fetchJsonWithTimeout(url, timeoutMs = 15000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      mode: "cors",
-      cache: "no-store",
-      credentials: "omit",
-      headers: {
-        Accept: "application/json",
-      },
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    return await response.json();
-  } finally {
-    clearTimeout(timer);
-  }
-}
+export const WEATHER_REFRESH_MS = 5 * 60 * 1000;
 
 export function renderWeatherDetails(weatherDetailsEl, alertPanelEl, weatherAlertEl, data) {
   const details = [
@@ -61,30 +36,22 @@ export function renderWeatherDetails(weatherDetailsEl, alertPanelEl, weatherAler
 
 export async function updateWeather({ weatherEl, weatherDetailsEl, weatherAlertEl, alertPanelEl, statusEl }) {
   try {
-    statusEl.textContent = "正在更新天气…";
     const requestUrl = await buildWeatherApiUrl(API_URL);
 
-    let data;
-    try {
-      data = await fetchJsonWithTimeout(requestUrl, 15000);
-    } catch (firstError) {
-      data = await fetchJsonWithTimeout(requestUrl, 20000);
-    }
+    const data = await fetchJson(requestUrl, 15000);
+    const payload = data?.data && typeof data.data === "object" ? data.data : data;
 
-    weatherEl.textContent = pickWeatherText(data);
-    renderWeatherDetails(weatherDetailsEl, alertPanelEl, weatherAlertEl, data);
+    weatherEl.textContent = pickWeatherText(payload);
+    renderWeatherDetails(weatherDetailsEl, alertPanelEl, weatherAlertEl, payload);
 
-    const city = [data?.province, data?.city, data?.district].filter(Boolean).join(" / ");
-    let nowTime=new Date().toLocaleString();
+    const city = [payload?.province, payload?.city, payload?.district].filter(Boolean).join(" / ");
+    const nowTime = new Date().toLocaleString();
     const reportTime = ` · 更新于 ${nowTime}`;
     statusEl.textContent = `${city || "自动定位"}${reportTime}`;
+    return true;
   } catch (error) {
     console.error("天气获取失败:", error);
-    weatherEl.textContent = "天气暂不可用";
-    weatherDetailsEl.innerHTML = "";
-    alertPanelEl.hidden = true;
-    weatherAlertEl.hidden = true;
-    const reason = error?.name === "AbortError" ? "请求超时" : error.message;
-    statusEl.textContent = `天气更新失败: ${reason}，稍后自动重试`;
+    statusEl.textContent = "天气更新失败，稍后自动重试";
+    return false;
   }
 }

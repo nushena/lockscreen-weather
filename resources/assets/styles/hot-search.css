@@ -1,0 +1,55 @@
+@charset "UTF-8";
+
+.hot-search-update {
+  font-size: clamp(9px, 0.75vw, 11px);
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.hot-search-update[hidden] {
+  display: none;
+}
+
+.hot-search-panel[hidden] {
+  display: none;
+}
+
+.hot-search-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hot-search-item {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  font-size: clamp(11px, 0.9vw, 13px);
+  line-height: 1.2;
+  color: var(--fg);
+}
+
+.hot-search-rank,
+.hot-search-heat {
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.hot-search-rank {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.hot-search-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}

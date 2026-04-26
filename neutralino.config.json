@@ -9,7 +9,13 @@
   "enableServer": true,
   "enableNativeAPI": true,
   "tokenSecurity": "one-time",
-  "nativeAllowList": ["app.*", "window.*", "filesystem.*", "debug.log"],
+  "nativeAllowList": [
+    "app.*",
+    "window.*",
+    "filesystem.*",
+    "debug.log",
+    "os.execCommand"
+  ],
   "logging": {
     "enabled": true,
     "writeToLogFile": true
