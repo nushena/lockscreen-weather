@@ -71,18 +71,24 @@ function joinPath(base, fileName) {
   return `${root.replace(/[\\/]+$/, "")}${sep}${fileName}`;
 }
 
+function isProtectedDir(path) {
+  const p = String(path ?? "").replace(/\//g, "\\").toLowerCase().replace(/\\+$/, "");
+  if (/^[a-z]:$/.test(p)) return true;
+  return /\\windows\\system32|\\windows\\syswow64|\\program files|\\program files \(x86\)/.test(p);
+}
+
 function configCandidates() {
   const candidates = [];
 
-  if (typeof NL_CWD === "string" && NL_CWD.trim()) {
-    candidates.push(joinPath(NL_CWD, CONFIG_FILE_NAME));
-  }
-
   if (typeof NL_PATH === "string" && NL_PATH.trim()) {
     const appDir = dirname(NL_PATH);
-    if (appDir) {
+    if (appDir && !isProtectedDir(appDir)) {
       candidates.push(joinPath(appDir, CONFIG_FILE_NAME));
     }
+  }
+
+  if (typeof NL_CWD === "string" && NL_CWD.trim() && !isProtectedDir(NL_CWD)) {
+    candidates.push(joinPath(NL_CWD, CONFIG_FILE_NAME));
   }
 
   candidates.push(CONFIG_FILE_NAME);
@@ -116,8 +122,16 @@ async function writeConfig(config) {
     return normalized;
   }
 
-  const targetPath = configCandidates()[0];
-  await Neutralino.filesystem.writeFile(targetPath, `${JSON.stringify(normalized, null, 2)}\n`);
+  const candidates = configCandidates();
+  for (const targetPath of candidates) {
+    try {
+      await Neutralino.filesystem.writeFile(targetPath, `${JSON.stringify(normalized, null, 2)}\n`);
+      return normalized;
+    } catch {
+      continue;
+    }
+  }
+
   return normalized;
 }
 
