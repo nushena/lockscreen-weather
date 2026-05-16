@@ -1,4 +1,9 @@
-import { clearWeatherConfig, getWeatherConfig, setWeatherConfig } from "./weather-config.js";
+import {
+  clearWeatherConfig,
+  getWeatherConfig,
+  getWeatherConfigPath,
+  setWeatherConfig,
+} from "./weather-config.js";
 import {
   getBackgroundState,
   setBackgroundApiUrl,
@@ -74,6 +79,10 @@ async function fillForm() {
   }
 }
 
+async function primaryConfigPath() {
+  return await getWeatherConfigPath();
+}
+
 await fillForm();
 await fillBackgroundForm();
 setStatus("保存后会立即写入本地配置。", "info");
@@ -92,10 +101,11 @@ formEl.addEventListener("submit", async (event) => {
     });
 
     await fillForm();
+    const configPath = await primaryConfigPath();
     setStatus(
       config.adcode || config.city
-        ? "保存成功。"
-        : "配置已清空，锁屏将回到 IP 自动定位。",
+        ? `保存成功。配置路径：${configPath}`
+        : `配置已清空，锁屏将回到 IP 自动定位。配置路径：${configPath}`,
       "success",
     );
   } catch (error) {
@@ -121,7 +131,8 @@ for (const radio of document.querySelectorAll('input[name="bgMode"]')) {
       const mode = selectedBgMode();
       await setBackgroundMode(mode);
       applyModeVisibility(mode);
-      setBgStatus(`背景模式已切换为${mode === "api-random" ? "API 随机壁纸" : "默认黑色"}。`, "success");
+      const configPath = await primaryConfigPath();
+      setBgStatus(`背景模式已切换为${mode === "api-random" ? "API 随机壁纸" : "默认黑色"}。配置路径：${configPath}`, "success");
     } catch (error) {
       setBgStatus(`切换失败：${error.message}`, "error");
     }
@@ -131,7 +142,8 @@ for (const radio of document.querySelectorAll('input[name="bgMode"]')) {
 bgApiUrlEl?.addEventListener("change", async () => {
   try {
     await setBackgroundApiUrl(bgApiUrlEl.value);
-    setBgStatus("随机壁纸地址保存成功。", "success");
+    const configPath = await primaryConfigPath();
+    setBgStatus(`随机壁纸地址保存成功。配置路径：${configPath}`, "success");
   } catch (error) {
     setBgStatus(`保存失败：${error.message}`, "error");
   }

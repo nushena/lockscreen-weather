@@ -1,5 +1,6 @@
 const MODE_MANAGE = "manage";
 const MODE_SCREEN = "screen";
+const MODE_PREVIEW = "preview";
 
 function hasNeutralino() {
   return typeof Neutralino !== "undefined";
@@ -35,7 +36,7 @@ function parseRuntimeMode() {
   }
 
   if (flag.startsWith("/p")) {
-    return "preview";
+    return MODE_PREVIEW;
   }
 
   return MODE_MANAGE;
@@ -68,7 +69,10 @@ function applyRuntimeClass(mode) {
     return;
   }
 
-  document.body.classList.toggle("screen-page", mode === MODE_SCREEN);
+  document.body.classList.toggle(
+    "screen-page",
+    mode === MODE_SCREEN || mode === MODE_PREVIEW,
+  );
   document.body.classList.toggle("manage-page", mode === MODE_MANAGE);
 }
 
@@ -110,6 +114,10 @@ async function applyWindowMode(mode, { confirmScreen = false } = {}) {
     return;
   }
 
+  if (mode === MODE_PREVIEW) {
+    return;
+  }
+
   await Neutralino.window.exitFullScreen().catch(() => {});
   await Neutralino.window.setBorderless(false);
   await Neutralino.window.setAlwaysOnTop(false);
@@ -130,11 +138,6 @@ async function bootstrap() {
   Neutralino.init();
   const mode = parseRuntimeMode();
 
-  if (mode === "preview") {
-    await Neutralino.app.exit();
-    return;
-  }
-
   const switched = await switchPage(mode);
   if (switched) {
     return;
@@ -143,7 +146,7 @@ async function bootstrap() {
   applyRuntimeClass(mode);
   await applyWindowMode(mode, { confirmScreen: mode === MODE_SCREEN });
 
-  if (mode !== MODE_SCREEN) {
+  if (mode !== MODE_SCREEN && mode !== MODE_PREVIEW) {
     await Neutralino.window.show().catch(() => {});
     await Neutralino.window.focus().catch(() => {});
   }
