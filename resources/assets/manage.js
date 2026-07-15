@@ -22,7 +22,7 @@ const bgApiUrlEl = document.getElementById("bgApiUrl");
 const bgApiBlockEl = document.getElementById("bgApiBlock");
 
 function normalizeStatusType(type) {
-  return ["success", "error", "pending", "info"].includes(type) ? type : "info";
+  return ["success", "error", "info"].includes(type) ? type : "info";
 }
 
 function setStatusState(element, text, type = "info") {
@@ -79,10 +79,6 @@ async function fillForm() {
   }
 }
 
-async function primaryConfigPath() {
-  return await getWeatherConfigPath();
-}
-
 await fillForm();
 await fillBackgroundForm();
 setStatus("保存后会立即写入本地配置。", "info");
@@ -101,7 +97,7 @@ formEl.addEventListener("submit", async (event) => {
     });
 
     await fillForm();
-    const configPath = await primaryConfigPath();
+    const configPath = await getWeatherConfigPath();
     setStatus(
       config.adcode || config.city
         ? `保存成功。配置路径：${configPath}`
@@ -131,7 +127,7 @@ for (const radio of document.querySelectorAll('input[name="bgMode"]')) {
       const mode = selectedBgMode();
       await setBackgroundMode(mode);
       applyModeVisibility(mode);
-      const configPath = await primaryConfigPath();
+      const configPath = await getWeatherConfigPath();
       setBgStatus(`背景模式已切换为${mode === "api-random" ? "API 随机壁纸" : "默认黑色"}。配置路径：${configPath}`, "success");
     } catch (error) {
       setBgStatus(`切换失败：${error.message}`, "error");
@@ -142,7 +138,7 @@ for (const radio of document.querySelectorAll('input[name="bgMode"]')) {
 bgApiUrlEl?.addEventListener("change", async () => {
   try {
     await setBackgroundApiUrl(bgApiUrlEl.value);
-    const configPath = await primaryConfigPath();
+    const configPath = await getWeatherConfigPath();
     setBgStatus(`随机壁纸地址保存成功。配置路径：${configPath}`, "success");
   } catch (error) {
     setBgStatus(`保存失败：${error.message}`, "error");

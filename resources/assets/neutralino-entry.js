@@ -42,14 +42,6 @@ function parseRuntimeMode() {
   return MODE_MANAGE;
 }
 
-function pageName() {
-  const path = String(window.location.pathname ?? "").toLowerCase();
-  if (path.endsWith("manage.html")) {
-    return MODE_MANAGE;
-  }
-  return MODE_SCREEN;
-}
-
 function targetPathForMode(targetMode) {
   return targetMode === MODE_MANAGE ? "/manage.html" : "/index.html";
 }

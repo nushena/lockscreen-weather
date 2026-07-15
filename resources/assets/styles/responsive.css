@@ -77,8 +77,4 @@
   .manage-header {
     flex-direction: column;
   }
-
-  .manage-back {
-    align-self: flex-start;
-  }
 }

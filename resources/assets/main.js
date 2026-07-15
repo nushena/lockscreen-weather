@@ -7,7 +7,6 @@ import { preloadItems } from "./preload-utils.js";
 
 const HOTBOARD_API_URL = "https://uapis.cn/api/v1/misc/hotboard?type=weibo";
 const REFRESH_INTERVAL_MS = WEATHER_REFRESH_MS;
-const LOCKSCREEN_READY_EVENT = "lockscreen-ready";
 
 const hourEl = document.getElementById("hour");
 const minuteEl = document.getElementById("minute");
@@ -93,7 +92,6 @@ function showContentAfterPreload() {
 }
 
 async function loadHotSearches() {
-  document.body.classList.add("hot-search-loading");
   hideHotSearchPanel();
 
   try {
@@ -124,8 +122,6 @@ async function loadHotSearches() {
     console.error("微博热搜获取失败:", error);
     hideHotSearchPanel();
     return false;
-  } finally {
-    document.body.classList.remove("hot-search-loading");
   }
 }
 
@@ -211,6 +207,9 @@ function hideWeatherPanel() {
 async function bootstrapScreen() {
   hideContentBeforePreload();
   renderTime(hourEl, minuteEl, secondEl, dateEl);
+  setInterval(() => {
+    renderTime(hourEl, minuteEl, secondEl, dateEl);
+  }, 1000);
   applyThemeFromConfig().catch((error) => {
     console.error("主题应用失败:", error);
   });
@@ -244,7 +243,6 @@ async function bootstrapScreen() {
   }
 
   showContentAfterPreload();
-  window.dispatchEvent(new Event(LOCKSCREEN_READY_EVENT));
 
   runRefreshLoop(
     () =>
@@ -262,5 +260,4 @@ async function bootstrapScreen() {
 
 bootstrapScreen().catch((error) => {
   console.error("锁屏启动失败:", error);
-  window.dispatchEvent(new Event(LOCKSCREEN_READY_EVENT));
 });

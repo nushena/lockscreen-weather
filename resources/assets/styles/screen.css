@@ -98,28 +98,6 @@
   text-align: center;
 }
 
-.home-links {
-  display: flex;
-  justify-content: center;
-  margin: clamp(8px, 1.2vh, 12px) 0 0;
-}
-
-.home-link {
-  color: var(--fg);
-  text-decoration: none;
-  font-size: clamp(11px, 0.85vw, 13px);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.home-link:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
 body.screen-page {
   overflow: hidden;
 }

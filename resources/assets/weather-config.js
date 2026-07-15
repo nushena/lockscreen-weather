@@ -6,8 +6,6 @@ const DEFAULT_CONFIG = {
   background: {
     mode: "black",
     apiUrl: "https://picsum.photos/1920/1080",
-    current: "",
-    history: [],
   },
 };
 
@@ -34,9 +32,6 @@ function normalizeBackground(input) {
   return {
     mode: normalizeBackgroundMode(input?.mode),
     apiUrl: apiUrl || DEFAULT_CONFIG.background.apiUrl,
-    current: "",
-    currentDataUrl: "",
-    history: [],
   };
 }
 
@@ -262,10 +257,6 @@ export async function getWeatherConfigPath() {
 
   const paths = await configCandidates();
   return paths[0] || CONFIG_FILE_NAME;
-}
-
-export async function getWeatherConfigPaths() {
-  return await configCandidates();
 }
 
 export async function getWeatherConfig() {

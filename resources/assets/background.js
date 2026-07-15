@@ -57,9 +57,6 @@ export async function applyBackgroundFromConfig() {
   await saveBackgroundConfig(config, {
     ...bg,
     mode: "black",
-    current: "",
-    currentDataUrl: "",
-    history: [],
   });
   setBodyBackgroundCss("");
 }
@@ -71,9 +68,6 @@ export async function setBackgroundMode(mode) {
   await saveBackgroundConfig(config, {
     ...bg,
     mode: normalizedMode,
-    current: "",
-    currentDataUrl: "",
-    history: [],
   });
 }
 
@@ -92,8 +86,5 @@ export async function getBackgroundState() {
   return {
     ...config.background,
     mode,
-    current: "",
-    currentDataUrl: "",
-    history: [],
   };
 }
