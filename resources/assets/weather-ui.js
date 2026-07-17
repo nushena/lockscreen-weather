@@ -45,13 +45,11 @@ export async function updateWeather({ weatherEl, weatherDetailsEl, weatherAlertE
     renderWeatherDetails(weatherDetailsEl, alertPanelEl, weatherAlertEl, payload);
 
     const city = [payload?.province, payload?.city, payload?.district].filter(Boolean).join(" / ");
-    const nowTime = new Date().toLocaleString();
-    const reportTime = ` · 更新于 ${nowTime}`;
-    statusEl.textContent = `${city || "自动定位"}${reportTime}`;
+    statusEl.textContent = city || "自动定位";
     return true;
   } catch (error) {
     console.error("天气获取失败:", error);
-    statusEl.textContent = "天气更新失败，稍后自动重试";
+    // 失败时保留已有内容；首屏未成功则保持空白，不抢占状态栏
     return false;
   }
 }

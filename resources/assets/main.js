@@ -3,7 +3,6 @@ import { updateWeather, WEATHER_REFRESH_MS } from "./weather-ui.js";
 import { applyBackgroundFromConfig } from "./background.js";
 import { getWeatherConfig } from "./weather-config.js";
 import { fetchJson } from "./native-json.js";
-import { preloadItems } from "./preload-utils.js";
 
 const HOTBOARD_API_URL = "https://uapis.cn/api/v1/misc/hotboard?type=weibo";
 const REFRESH_INTERVAL_MS = WEATHER_REFRESH_MS;
@@ -48,14 +47,45 @@ function renderHotSearches(listEl, items) {
     .join("");
 }
 
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatHotSearchUpdateTime(updateTime) {
+  const raw = String(updateTime ?? "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  // 兼容时间戳（秒 / 毫秒）与常见日期字符串
+  let date;
+  if (/^\d+$/.test(raw)) {
+    const num = Number(raw);
+    date = new Date(raw.length <= 10 ? num * 1000 : num);
+  } else {
+    date = new Date(raw.includes("T") ? raw : raw.replace(/-/g, "/"));
+  }
+
+  if (Number.isNaN(date.getTime())) {
+    return raw;
+  }
+
+  return `${date.getFullYear()}年${pad2(date.getMonth() + 1)}月${pad2(date.getDate())}日 ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+}
+
 function renderHotSearchUpdate(updateEl, updateTime) {
-  if (!updateTime) {
+  if (!updateEl) {
+    return;
+  }
+
+  const formatted = formatHotSearchUpdateTime(updateTime);
+  if (!formatted) {
     updateEl.textContent = "";
     updateEl.hidden = true;
     return;
   }
 
-  updateEl.textContent = `更新时间 ${updateTime}`;
+  updateEl.textContent = `更新时间 ${formatted}`;
   updateEl.hidden = false;
 }
 
@@ -65,24 +95,11 @@ function showHotSearchPanel() {
   }
 }
 
-function hideHotSearchPanel() {
-  if (hotSearchPanelEl) {
-    hotSearchPanelEl.hidden = true;
-  }
-  hotSearchListEl.innerHTML = "";
-  renderHotSearchUpdate(hotSearchUpdateEl, "");
+function hasHotSearchContent() {
+  return Boolean(hotSearchListEl?.children?.length);
 }
 
-function hideContentBeforePreload() {
-  if (contentEl) {
-    contentEl.hidden = true;
-  }
-  if (footerEl) {
-    footerEl.hidden = true;
-  }
-}
-
-function showContentAfterPreload() {
+function ensureShellVisible() {
   if (contentEl) {
     contentEl.hidden = false;
   }
@@ -91,9 +108,14 @@ function showContentAfterPreload() {
   }
 }
 
-async function loadHotSearches() {
-  hideHotSearchPanel();
+function startClock() {
+  renderTime(hourEl, minuteEl, secondEl, dateEl);
+  setInterval(() => {
+    renderTime(hourEl, minuteEl, secondEl, dateEl);
+  }, 1000);
+}
 
+async function loadHotSearches() {
   try {
     const data = await fetchJson(HOTBOARD_API_URL, 15000);
     const list = Array.isArray(data?.list)
@@ -107,8 +129,8 @@ async function loadHotSearches() {
       .map((item) => [item?.title ?? "", formatHotValue(item?.hot_value)]);
 
     if (!items.length) {
-      hideHotSearchPanel();
-      return true;
+      // 空数据：首屏保持隐藏；刷新时保留旧列表
+      return hasHotSearchContent();
     }
 
     renderHotSearches(hotSearchListEl, items);
@@ -120,7 +142,26 @@ async function loadHotSearches() {
     return true;
   } catch (error) {
     console.error("微博热搜获取失败:", error);
-    hideHotSearchPanel();
+    // 失败不拆旧内容，谁先到谁显示的渐进策略
+    return false;
+  }
+}
+
+async function loadWeather() {
+  return await updateWeather({
+    weatherEl,
+    weatherDetailsEl,
+    weatherAlertEl,
+    alertPanelEl,
+    statusEl,
+  });
+}
+
+async function loadBackground() {
+  try {
+    return await applyBackgroundFromConfig();
+  } catch (error) {
+    console.error("背景应用失败:", error);
     return false;
   }
 }
@@ -160,101 +201,21 @@ async function applyThemeFromConfig() {
   document.body.classList.toggle("light-theme", config?.theme === "light");
 }
 
-async function preloadWeather() {
-  const success = await updateWeather({
-    weatherEl,
-    weatherDetailsEl,
-    weatherAlertEl,
-    alertPanelEl,
-    statusEl,
-  });
-
-  if (!success) {
-    throw new Error("天气预加载失败");
-  }
-}
-
-async function preloadHotSearches() {
-  const success = await loadHotSearches();
-
-  if (!success) {
-    throw new Error("热搜预加载失败");
-  }
-}
-
-async function preloadBackground() {
-  await applyBackgroundFromConfig();
-}
-
-async function preloadScreenContent() {
-  return await preloadItems(
-    [
-      { key: "weather", task: preloadWeather },
-      { key: "hotSearch", task: preloadHotSearches },
-      { key: "background", task: preloadBackground },
-    ],
-    2,
-  );
-}
-
-function hideWeatherPanel() {
-  weatherEl.textContent = "";
-  weatherDetailsEl.innerHTML = "";
-  weatherAlertEl.textContent = "";
-  alertPanelEl.hidden = true;
-}
-
 async function bootstrapScreen() {
-  hideContentBeforePreload();
-  renderTime(hourEl, minuteEl, secondEl, dateEl);
-  setInterval(() => {
-    renderTime(hourEl, minuteEl, secondEl, dateEl);
-  }, 1000);
+  // 1. 底盘立刻可见：时间 + 黑底
+  ensureShellVisible();
+  startClock();
   applyThemeFromConfig().catch((error) => {
     console.error("主题应用失败:", error);
   });
 
-  let weatherOk = false;
-  let hotSearchOk = false;
+  // 2. 三路并行，谁先到谁先显示；失败立即再试一次
+  refreshWithRetry(loadWeather, "天气");
+  refreshWithRetry(loadHotSearches, "微博热搜");
+  refreshWithRetry(loadBackground, "背景");
 
-  try {
-    const preloadResult = await preloadScreenContent();
-
-    const weatherResult = preloadResult.items.find(
-      (item) => item.key === "weather",
-    );
-    weatherOk = weatherResult?.ok ?? false;
-
-    const hotSearchResult = preloadResult.items.find(
-      (item) => item.key === "hotSearch",
-    );
-    hotSearchOk = hotSearchResult?.ok ?? false;
-  } catch (error) {
-    console.error("首屏预加载失败:", error);
-  }
-
-  if (!weatherOk) {
-    hideWeatherPanel();
-    statusEl.textContent = "";
-  }
-
-  if (!hotSearchOk) {
-    hideHotSearchPanel();
-  }
-
-  showContentAfterPreload();
-
-  runRefreshLoop(
-    () =>
-      updateWeather({
-        weatherEl,
-        weatherDetailsEl,
-        weatherAlertEl,
-        alertPanelEl,
-        statusEl,
-      }),
-    "天气",
-  );
+  // 3. 仅天气 / 热搜进入 5 分钟刷新；背景只在启动时处理
+  runRefreshLoop(loadWeather, "天气");
   runRefreshLoop(loadHotSearches, "微博热搜");
 }
 
